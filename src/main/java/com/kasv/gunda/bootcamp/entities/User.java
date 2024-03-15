@@ -7,8 +7,8 @@ import lombok.Setter;
 @Entity
 @Setter
 @Getter
-@Table(name = "user")
-public class user {
+@Table(name = "users")
+public class User {
 
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Id
@@ -21,12 +21,21 @@ public class user {
     @Column(name = "password")
     private String password;
 
-    public user(int id, String username, String password) {
+    public User(int id, String username, String password) {
         this.id = id;
         this.username = username;
         this.password = password;
     }
 
-    public user() {
+    public User() {
+    }
+
+    // ToString method
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                '}';
     }
 }

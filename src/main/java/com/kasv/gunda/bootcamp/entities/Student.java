@@ -1,4 +1,4 @@
 package com.kasv.gunda.bootcamp.entities;
 
-public class student {
+public class Student {
 }
