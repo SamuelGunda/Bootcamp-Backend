@@ -16,13 +16,18 @@ public class StudentController {
 
     @GetMapping("/users")
     public String getAllStudents(@RequestBody String token) {
-//        token = token.replace("Bearer ", "");
+
         return studentService.getAllStudents(token);
+
     }
 
     @GetMapping("/user/{id}")
     public ResponseEntity<String> getStudentById(@PathVariable Long id, @RequestBody String token) {
-//        token = token.replace("Bearer ", "");
+
+        if(token == null || token.isEmpty() || id == null) {
+            return ResponseEntity.status(400).body("Invalid request. Please provide valid input data.");
+        }
+
         return studentService.getStudentById(id, token);
     }
 
