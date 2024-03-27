@@ -12,4 +12,8 @@ public interface StudentRepository extends JpaRepository<Student, Integer>{
 
     List<Student> findAll();
 
+    boolean existsById(long id);
+
+    Student findById(long id);
+
 }

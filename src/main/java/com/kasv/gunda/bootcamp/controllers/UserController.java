@@ -6,7 +6,7 @@ import com.kasv.gunda.bootcamp.services.TokenService;
 
 
 @RestController
-@RequestMapping("/api/users")
+//@RequestMapping("/api/users")
 public class UserController {
 
     private final UserRepository userRepository;

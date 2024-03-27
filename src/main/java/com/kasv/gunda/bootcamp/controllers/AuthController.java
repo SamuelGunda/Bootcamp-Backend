@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
+//@RequestMapping("/api")
 public class AuthController {
 
     private final UserRepository userRepository;
@@ -49,7 +49,8 @@ public class AuthController {
                 String token = tokenGenerator.generateToken();
                 tokenService.storeToken((long) userFromDb.getId(), token);
 
-                jsonResponse.put("token", "Bearer " + token);
+//                jsonResponse.put("token", "Bearer " + token);
+                jsonResponse.put("token", token);
                 jsonResponse.put("username", userFromDb.getUsername());
                 return ResponseEntity.status(200).body(gson.toJson(jsonResponse));
 
@@ -71,13 +72,24 @@ public class AuthController {
 
         Gson gson = new Gson();
         Map<String, String> jsonResponse = new HashMap<>();
+
+        if (logoutRequest.getUsername() == null ||
+                logoutRequest.getToken() == null ||
+                logoutRequest.getUsername().isEmpty() ||
+                logoutRequest.getToken().isEmpty()) {
+
+            jsonResponse.put("error", "Invalid request. Please provide valid input data.");
+
+            return ResponseEntity.status(400).body(gson.toJson(jsonResponse));
+        }
+
         long userId = (long) userRepository.findIdByUsername(logoutRequest.getUsername());
 
         if (tokenService.isTokenExists(userId)) {
             if (tokenService.isTokenValid(logoutRequest.getToken())) {
                 tokenService.removeToken(userId);
                 jsonResponse.put("message", "User logged out successfully");
-                return ResponseEntity.status(200).body(gson.toJson(jsonResponse));
+                return ResponseEntity.status(200).body("{}");
             } else {
                 jsonResponse.put("error", "Invalid token. Please provide valid token.");
                 return ResponseEntity.status(401).body(gson.toJson(jsonResponse));

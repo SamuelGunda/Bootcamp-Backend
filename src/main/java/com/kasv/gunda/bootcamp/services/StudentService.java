@@ -3,6 +3,7 @@ package com.kasv.gunda.bootcamp.services;
 import com.google.gson.Gson;
 import com.kasv.gunda.bootcamp.entities.Student;
 import com.kasv.gunda.bootcamp.repositories.StudentRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -34,5 +35,20 @@ public class StudentService {
 
         }
         return gson.toJson(students);
+    }
+
+    public ResponseEntity<String> getStudentById(Long id, String token) {
+        Gson gson = new Gson();
+        Map<String, String> jsonResponse = new HashMap<>();
+
+        if (!tokenService.isTokenValid(token)) {
+            return ResponseEntity.status(401).body("Invalid token. Please provide a valid token.");
+        }
+
+        if (!studentRepository.existsById(id)) {
+            return ResponseEntity.status(404).body("Student with id " + id + " not found.");
+        }
+
+        return ResponseEntity.status(200).body(gson.toJson(studentRepository.findById(id)));
     }
 }
