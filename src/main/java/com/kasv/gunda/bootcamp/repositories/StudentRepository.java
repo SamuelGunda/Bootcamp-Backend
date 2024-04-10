@@ -16,4 +16,6 @@ public interface StudentRepository extends JpaRepository<Student, Integer>{
 
     Student findById(long id);
 
+
+
 }
