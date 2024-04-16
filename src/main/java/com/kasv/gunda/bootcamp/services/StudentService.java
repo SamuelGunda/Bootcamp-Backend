@@ -1,9 +1,11 @@
 package com.kasv.gunda.bootcamp.services;
 
 import com.google.gson.Gson;
+import com.kasv.gunda.bootcamp.entities.LoginRequest;
 import com.kasv.gunda.bootcamp.entities.LogoutRequest;
 import com.kasv.gunda.bootcamp.entities.Student;
 import com.kasv.gunda.bootcamp.repositories.StudentRepository;
+import com.kasv.gunda.bootcamp.repositories.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -16,19 +18,21 @@ public class StudentService {
 
     private TokenService tokenService = TokenService.getInstance();
     private final StudentRepository studentRepository;
+    private final UserRepository userRepository;
 
-    public StudentService(StudentRepository studentRepository) {
+    public StudentService(StudentRepository studentRepository, UserRepository userRepository) {
         this.studentRepository = studentRepository;
+        this.userRepository = userRepository;
     }
 
-    public String getAllStudents(String token) {
+    public String getAllStudents(LoginRequest loginRequest) {
         Gson gson = new Gson();
         Map<String, String> jsonResponse = new HashMap<>();
 
         List<Student> students = studentRepository.findAll();
 
-        if (token != null && !token.isEmpty()) {
-            if (!tokenService.isTokenValid(token)) {
+        if (loginRequest.getToken() != null && !loginRequest.getToken().isEmpty()) {
+            if (!tokenService.isTokenValid(loginRequest.getToken())) {
 
                 for (Student student : students) {
                     student.setDob(null);
@@ -46,11 +50,17 @@ public class StudentService {
         }
     }
 
-    public ResponseEntity<String> getStudentById(Long id, String token) {
+    public ResponseEntity<String> getStudentById(Long id, LoginRequest loginRequest) {
         Gson gson = new Gson();
         Map<String, String> jsonResponse = new HashMap<>();
 
-        if (!tokenService.isTokenValid(token)) {
+        long userId = (long) userRepository.findIdByUsername(loginRequest.getUsername());
+
+        if (tokenService.isTokenExists(userId)) {
+            if (!tokenService.isTokenValid(loginRequest.getToken())) {
+                return ResponseEntity.status(401).body("Invalid token. Please provide a valid token.");
+            }
+        } else {
             return ResponseEntity.status(401).body("Invalid token. Please provide a valid token.");
         }
 

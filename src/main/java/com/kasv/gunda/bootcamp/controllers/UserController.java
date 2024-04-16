@@ -33,8 +33,8 @@ public class UserController {
         }
     }
 
-    @PutMapping("/update/changePassword/{username}")
-    public ResponseEntity<String> changePassword(@PathVariable String username ,@RequestBody PasswordChangeRequest request) {
+    @PutMapping("/admin/password")
+    public ResponseEntity<String> changePassword(@RequestParam String username ,@RequestBody PasswordChangeRequest request) {
         if (request.getToken() == null || request.getToken().isEmpty()
                 || request.getNewPassword() == null || request.getNewPassword().isEmpty()
                 || request.getOldPassword() == null || request.getOldPassword().isEmpty()) {
