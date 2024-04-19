@@ -21,14 +21,14 @@ public class StudentController {
         this.studentService = studentService;
     }
 
-    @GetMapping("/users")
+    @PostMapping("/users")
     public String getAllStudents(@RequestBody(required = false) LoginRequest loginRequest) {
 
         return studentService.getAllStudents(loginRequest);
 
     }
 
-    @GetMapping("/user/{id}")
+    @PostMapping("/user/{id}")
     public ResponseEntity<String> getStudentById(@PathVariable Long id, @RequestBody LoginRequest loginRequest) {
         Gson gson = new Gson();
         Map<String, String> jsonResponse = new HashMap<>();

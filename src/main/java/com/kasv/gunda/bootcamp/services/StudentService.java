@@ -58,14 +58,17 @@ public class StudentService {
 
         if (tokenService.isTokenExists(userId)) {
             if (!tokenService.isTokenValid(loginRequest.getToken())) {
-                return ResponseEntity.status(401).body("Invalid token. Please provide a valid token.");
+                jsonResponse.put("error", "Invalid token. Please provide valid token.");
+                return ResponseEntity.status(401).body(gson.toJson(jsonResponse));
             }
         } else {
-            return ResponseEntity.status(401).body("Invalid token. Please provide a valid token.");
+            jsonResponse.put("error", "Invalid token. Please provide valid token.");
+            return ResponseEntity.status(401).body(gson.toJson(jsonResponse));
         }
 
         if (!studentRepository.existsById(id)) {
-            return ResponseEntity.status(404).body("Student with id " + id + " not found.");
+            jsonResponse.put("error", "Student with id " + id + " not found.");
+            return ResponseEntity.status(404).body(gson.toJson(jsonResponse));
         }
 
         return ResponseEntity.status(200).body(gson.toJson(studentRepository.findById(id)));
