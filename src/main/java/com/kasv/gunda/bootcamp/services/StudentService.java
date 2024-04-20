@@ -1,7 +1,7 @@
 package com.kasv.gunda.bootcamp.services;
 
 import com.google.gson.Gson;
-import com.kasv.gunda.bootcamp.entities.LoginRequest;
+import com.kasv.gunda.bootcamp.entities.AuthCheck;
 import com.kasv.gunda.bootcamp.entities.LogoutRequest;
 import com.kasv.gunda.bootcamp.entities.Student;
 import com.kasv.gunda.bootcamp.repositories.StudentRepository;
@@ -25,14 +25,15 @@ public class StudentService {
         this.userRepository = userRepository;
     }
 
-    public String getAllStudents(LoginRequest loginRequest) {
+    public String getAllStudents(AuthCheck authCheck) {
+
         Gson gson = new Gson();
         Map<String, String> jsonResponse = new HashMap<>();
 
         List<Student> students = studentRepository.findAll();
 
-        if (loginRequest.getToken() != null && !loginRequest.getToken().isEmpty()) {
-            if (!tokenService.isTokenValid(loginRequest.getToken())) {
+        if (authCheck.getToken() != null && !authCheck.getToken().isEmpty()) {
+            if (!tokenService.isTokenValid(authCheck.getToken())) {
 
                 for (Student student : students) {
                     student.setDob(null);
@@ -50,14 +51,15 @@ public class StudentService {
         }
     }
 
-    public ResponseEntity<String> getStudentById(Long id, LoginRequest loginRequest) {
+    public ResponseEntity<String> getStudentById(Long id, AuthCheck authCheck) {
+
         Gson gson = new Gson();
         Map<String, String> jsonResponse = new HashMap<>();
 
-        long userId = (long) userRepository.findIdByUsername(loginRequest.getUsername());
+        long userId = (long) userRepository.findIdByUsername(authCheck.getUsername());
 
         if (tokenService.isTokenExists(userId)) {
-            if (!tokenService.isTokenValid(loginRequest.getToken())) {
+            if (!tokenService.isTokenValid(authCheck.getToken())) {
                 jsonResponse.put("error", "Invalid token. Please provide valid token.");
                 return ResponseEntity.status(401).body(gson.toJson(jsonResponse));
             }
@@ -76,18 +78,24 @@ public class StudentService {
 
     public ResponseEntity<String> registerStudent(Student student) {
 
+        Gson gson = new Gson();
+        Map<String, String> jsonResponse = new HashMap<>();
+
         if (student == null) {
-            return ResponseEntity.status(400).body("Invalid request. Please provide valid input data.");
+            jsonResponse.put("error", "Invalid request. Please provide valid input data.");
+            return ResponseEntity.status(400).body(gson.toJson(jsonResponse));
         }
 
         if (student.getFirstName() == null || student.getFirstName().isEmpty() ||
                 student.getLastName() == null || student.getLastName().isEmpty() ||
                 student.getDob() == null) {
-            return ResponseEntity.status(400).body("Invalid request. Please provide valid input data.");
+            jsonResponse.put("error", "Invalid request. Please provide valid input data.");
+            return ResponseEntity.status(400).body(gson.toJson(jsonResponse));
         }
 
         if(studentRepository.existsById(student.getId())) {
-            return ResponseEntity.status(400).body("Student with id " + student.getId() + " already exists.");
+            jsonResponse.put("error", "Student with id " + student.getId() + " already exists.");
+            return ResponseEntity.status(400).body(gson.toJson(jsonResponse));
         }
 
         studentRepository.save(student);
@@ -98,12 +106,17 @@ public class StudentService {
 
     public ResponseEntity<String> updateLastName(Long id, LogoutRequest details) {
 
+        Gson gson = new Gson();
+        Map<String, String> jsonResponse = new HashMap<>();
+
         if (!tokenService.isTokenValid(details.getToken())) {
-            return ResponseEntity.status(401).body("Invalid token. Please provide a valid token.");
+            jsonResponse.put("error", "Invalid request. Please provide valid input data.");
+            return ResponseEntity.status(400).body(gson.toJson(jsonResponse));
         }
 
         if (!studentRepository.existsById(id)) {
-            return ResponseEntity.status(404).body("Student with id " + id + " not found.");
+            jsonResponse.put("error", "Student with id " + id + " not found.");
+            return ResponseEntity.status(404).body(gson.toJson(jsonResponse));
         }
 
         Student student = studentRepository.findById(id);

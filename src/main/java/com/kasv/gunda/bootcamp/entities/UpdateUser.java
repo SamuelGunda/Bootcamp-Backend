@@ -5,7 +5,10 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class LoginRequest {
-    private String token;
-    private String username;
+public class UpdateUser {
+
+    String token;
+    String email;
+    String username;
+
 }

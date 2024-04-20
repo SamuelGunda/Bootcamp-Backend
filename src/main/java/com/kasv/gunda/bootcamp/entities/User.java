@@ -21,10 +21,14 @@ public class User {
     @Column(name = "password")
     private String password;
 
-    public User(int id, String username, String password) {
+    @Column(name = "email")
+    private String email;
+
+    public User(int id, String username, String password, String email) {
         this.id = id;
         this.username = username;
         this.password = password;
+        this.email = email;
     }
 
     public User() {
@@ -36,6 +40,7 @@ public class User {
         return "User{" +
                 "id=" + id +
                 ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
                 '}';
     }
 }

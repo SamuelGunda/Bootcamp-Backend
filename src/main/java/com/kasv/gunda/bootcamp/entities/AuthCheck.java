@@ -5,8 +5,9 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class PasswordChangeRequest {
+public class AuthCheck {
+
     private String token;
-    private String newPassword;
-    private String oldPassword;
+    private String username;
+
 }
