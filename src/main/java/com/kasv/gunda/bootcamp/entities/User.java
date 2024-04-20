@@ -1,10 +1,12 @@
 package com.kasv.gunda.bootcamp.entities;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Setter
 @Getter
 @Table(name = "users")
@@ -23,16 +25,6 @@ public class User {
 
     @Column(name = "email")
     private String email;
-
-    public User(int id, String username, String password, String email) {
-        this.id = id;
-        this.username = username;
-        this.password = password;
-        this.email = email;
-    }
-
-    public User() {
-    }
 
     // ToString method
     @Override

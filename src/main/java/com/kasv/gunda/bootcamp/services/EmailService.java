@@ -13,6 +13,7 @@ public class EmailService {
         this.emailSender = emailSender;
     }
 
+    @Async
     public void sendNewPassword(String to, String newPassword) {
         SimpleMailMessage message = new SimpleMailMessage();
 
