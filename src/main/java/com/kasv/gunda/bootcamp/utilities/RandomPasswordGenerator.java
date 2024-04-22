@@ -1,6 +1,6 @@
 package com.kasv.gunda.bootcamp.utilities;
 
-public class ForgotPasswordCodeGenerator {
+public class RandomPasswordGenerator {
     public static String generateCode() {
         String randomChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         StringBuilder code = new StringBuilder();

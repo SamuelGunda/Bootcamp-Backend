@@ -5,7 +5,9 @@ import com.kasv.gunda.bootcamp.controllers.AuthController;
 import com.kasv.gunda.bootcamp.entities.LogoutRequest;
 import com.kasv.gunda.bootcamp.entities.UpdatePassword;
 import com.kasv.gunda.bootcamp.entities.User;
+import com.kasv.gunda.bootcamp.repositories.StudentRepository;
 import com.kasv.gunda.bootcamp.repositories.UserRepository;
+import com.kasv.gunda.bootcamp.utilities.TokenFunctions;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -15,12 +17,15 @@ import java.util.Map;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+
+    private final StudentRepository studentRepository;
     private final AuthController authController;
 
-    private TokenService tokenService = TokenService.getInstance();
+    private TokenFunctions tokenFunctions = TokenFunctions.getInstance();
 
-    public UserService(UserRepository userRepository, AuthController authController) {
+    public UserService(UserRepository userRepository, StudentRepository studentRepository, AuthController authController) {
         this.userRepository = userRepository;
+        this.studentRepository = studentRepository;
         this.authController = authController;
     }
 
@@ -35,7 +40,7 @@ public class UserService {
 
         }
 
-        if (!tokenService.isTokenValid(request.getToken())) {
+        if (!tokenFunctions.isTokenValid(request.getToken())) {
             jsonResponse.put("error", "Invalid token. Please provide a valid token.");
             return ResponseEntity.status(401).body(gson.toJson(jsonResponse));
         }
@@ -64,5 +69,15 @@ public class UserService {
         jsonResponse.put("message", "Password changed successfully.");
         return ResponseEntity.status(200).body(gson.toJson(jsonResponse));
 
+    }
+
+    public ResponseEntity<String> getAllUsersAndStudents() {
+        Gson gson = new Gson();
+        Map<String, String> jsonResponse = new HashMap<>();
+
+        jsonResponse.put("users", gson.toJson(userRepository.findAll().size()));
+        jsonResponse.put("students", gson.toJson(studentRepository.findAll().size()));
+
+        return ResponseEntity.status(200).body(gson.toJson(jsonResponse));
     }
 }

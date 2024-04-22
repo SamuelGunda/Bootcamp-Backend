@@ -7,7 +7,6 @@ import com.kasv.gunda.bootcamp.repositories.UserRepository;
 import com.kasv.gunda.bootcamp.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.kasv.gunda.bootcamp.services.TokenService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -55,5 +54,10 @@ public class UserController {
         }
 
         return userService.changePassword(request);
+    }
+
+    @GetMapping("/info")
+    public ResponseEntity<String> getAllUsersAndStudents() {
+        return userService.getAllUsersAndStudents();
     }
 }

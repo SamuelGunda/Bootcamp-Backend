@@ -3,9 +3,8 @@ package com.kasv.gunda.bootcamp.services;
 import com.google.gson.Gson;
 import com.kasv.gunda.bootcamp.entities.LogoutRequest;
 import com.kasv.gunda.bootcamp.entities.User;
+import com.kasv.gunda.bootcamp.utilities.*;
 import com.kasv.gunda.bootcamp.repositories.UserRepository;
-import com.kasv.gunda.bootcamp.utilities.TokenGenerator;
-import com.kasv.gunda.bootcamp.utilities.ForgotPasswordCodeGenerator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -16,13 +15,13 @@ import java.util.Map;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final EmailService emailService;
-    private TokenService tokenService = TokenService.getInstance();
-    private TimeoutService timeoutService = TimeoutService.getInstance();
+    private final EmailFunctions emailFunctions;
+    private TokenFunctions tokenFunctions = TokenFunctions.getInstance();
+    private UserTimeoutFunctions userTimeoutFunctions = UserTimeoutFunctions.getInstance();
 
-    public AuthService(UserRepository userRepository, EmailService emailService) {
+    public AuthService(UserRepository userRepository, EmailFunctions emailFunctions) {
         this.userRepository = userRepository;
-        this.emailService = emailService;
+        this.emailFunctions = emailFunctions;
     }
 
     public ResponseEntity<String> login(User user) {
@@ -33,34 +32,34 @@ public class AuthService {
         User userFromDb = userRepository.findByUsername(user.getUsername());
 
         if (userFromDb != null) {
-            if (userFromDb.getPassword().equals(user.getPassword()) && timeoutService.isUserOnTimeout(userFromDb.getId()) == false){
+            if (userFromDb.getPassword().equals(user.getPassword()) && userTimeoutFunctions.isUserOnTimeout(userFromDb.getId()) == false){
 
                 String token = TokenGenerator.generateToken();
-                tokenService.storeToken((long) userFromDb.getId(), token);
+                tokenFunctions.storeToken((long) userFromDb.getId(), token);
 
                 jsonResponse.put("token", token);
                 jsonResponse.put("username", userFromDb.getUsername());
 
-                timeoutService.resetBadPasswordsCount(userFromDb.getId());
+                userTimeoutFunctions.resetBadPasswordsCount(userFromDb.getId());
                 return ResponseEntity.status(200).body(gson.toJson(jsonResponse));
 
             } else {
-                if (timeoutService.isUserOnTimeout(userFromDb.getId())) {
+                if (userTimeoutFunctions.isUserOnTimeout(userFromDb.getId())) {
                     jsonResponse.put("message", "Your account is locked. Please try again after 5 seconds.");
                     return ResponseEntity.status(401).body(gson.toJson(jsonResponse));
                 }
-                if (timeoutService.getBadPasswordsCount(userFromDb.getId()) < 3) {
-                    timeoutService.incrementCount((long) userFromDb.getId());
+                if (userTimeoutFunctions.getBadPasswordsCount(userFromDb.getId()) < 3) {
+                    userTimeoutFunctions.incrementCount((long) userFromDb.getId());
                 }
-                if (timeoutService.getBadPasswordsCount(userFromDb.getId()) >= 3 ) {
-                    timeoutService.setUserTimeout( userFromDb.getId());
+                if (userTimeoutFunctions.getBadPasswordsCount(userFromDb.getId()) >= 3 ) {
+                    userTimeoutFunctions.setUserTimeout( userFromDb.getId());
                     jsonResponse.put("message", "Your account has been locked. Please try again after 5 seconds.");
                     return ResponseEntity.status(401).body(gson.toJson(jsonResponse));
                 }
                 jsonResponse.put(
                         "error",
                         "Invalid credentials. Please provide valid credentials. " +
-                        timeoutService.getBadPasswordsCount(userFromDb.getId()) +
+                        userTimeoutFunctions.getBadPasswordsCount(userFromDb.getId()) +
                         "/3 failed attempts."
                 );
                 return ResponseEntity.status(401).body(gson.toJson(jsonResponse));
@@ -78,9 +77,9 @@ public class AuthService {
 
         long userId = (long) userRepository.findIdByUsername(logoutRequest.getUsername());
 
-        if (tokenService.isTokenExists(userId)) {
-            if (tokenService.isTokenValid(logoutRequest.getToken())) {
-                tokenService.removeToken(userId);
+        if (tokenFunctions.isTokenExists(userId)) {
+            if (tokenFunctions.isTokenValid(logoutRequest.getToken())) {
+                tokenFunctions.removeToken(userId);
                 jsonResponse.put("message", "User logged out successfully");
                 return ResponseEntity.status(200).body("{}");
             } else {
@@ -102,10 +101,10 @@ public class AuthService {
 
         if (userFromDb != null) {
             if (userFromDb.getEmail().equals(user.getEmail())) {
-                String newPassword = ForgotPasswordCodeGenerator.generateCode();
+                String newPassword = RandomPasswordGenerator.generateCode();
                 userFromDb.setPassword(newPassword);
                 userRepository.save(userFromDb);
-                emailService.sendNewPassword(userFromDb.getEmail(), newPassword);
+                emailFunctions.sendNewPassword(userFromDb.getEmail(), newPassword);
                 jsonResponse.put("message", "New password has been sent to your email.");
                 return ResponseEntity.status(200).body(gson.toJson(jsonResponse));
             } else {

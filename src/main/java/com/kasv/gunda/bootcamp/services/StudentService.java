@@ -6,6 +6,7 @@ import com.kasv.gunda.bootcamp.entities.LogoutRequest;
 import com.kasv.gunda.bootcamp.entities.Student;
 import com.kasv.gunda.bootcamp.repositories.StudentRepository;
 import com.kasv.gunda.bootcamp.repositories.UserRepository;
+import com.kasv.gunda.bootcamp.utilities.TokenFunctions;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +17,7 @@ import java.util.Map;
 @Service
 public class StudentService {
 
-    private TokenService tokenService = TokenService.getInstance();
+    private TokenFunctions tokenFunctions = TokenFunctions.getInstance();
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
 
@@ -28,12 +29,14 @@ public class StudentService {
     public String getAllStudents(AuthCheck authCheck) {
 
         Gson gson = new Gson();
-        Map<String, String> jsonResponse = new HashMap<>();
 
         List<Student> students = studentRepository.findAll();
 
-        if (authCheck.getToken() != null && !authCheck.getToken().isEmpty()) {
-            if (!tokenService.isTokenValid(authCheck.getToken())) {
+
+        if (authCheck.getToken() != null || !authCheck.getToken().isEmpty() ||
+                authCheck.getUsername() != null || !authCheck.getUsername().isEmpty()) {
+
+            if (!tokenFunctions.isTokenValid(authCheck.getToken())) {
 
                 for (Student student : students) {
                     student.setDob(null);
@@ -41,14 +44,13 @@ public class StudentService {
                 }
 
             }
-            return gson.toJson(students);
         } else {
             for (Student student : students) {
                 student.setDob(null);
                 student.setLastName(student.getLastName().substring(0, 1));
             }
-            return gson.toJson(students);
         }
+        return gson.toJson(students);
     }
 
     public ResponseEntity<String> getStudentById(Long id, AuthCheck authCheck) {
@@ -58,8 +60,8 @@ public class StudentService {
 
         long userId = (long) userRepository.findIdByUsername(authCheck.getUsername());
 
-        if (tokenService.isTokenExists(userId)) {
-            if (!tokenService.isTokenValid(authCheck.getToken())) {
+        if (tokenFunctions.isTokenExists(userId)) {
+            if (!tokenFunctions.isTokenValid(authCheck.getToken())) {
                 jsonResponse.put("error", "Invalid token. Please provide valid token.");
                 return ResponseEntity.status(401).body(gson.toJson(jsonResponse));
             }
@@ -109,7 +111,7 @@ public class StudentService {
         Gson gson = new Gson();
         Map<String, String> jsonResponse = new HashMap<>();
 
-        if (!tokenService.isTokenValid(details.getToken())) {
+        if (!tokenFunctions.isTokenValid(details.getToken())) {
             jsonResponse.put("error", "Invalid request. Please provide valid input data.");
             return ResponseEntity.status(400).body(gson.toJson(jsonResponse));
         }

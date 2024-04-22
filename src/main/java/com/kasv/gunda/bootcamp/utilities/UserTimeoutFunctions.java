@@ -1,25 +1,25 @@
-package com.kasv.gunda.bootcamp.services;
+package com.kasv.gunda.bootcamp.utilities;
 
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Service
-public class TimeoutService {
+@Component
+public class UserTimeoutFunctions {
 
     private final Map<Long, Integer> badPasswordsCount;
     private final Map<Long, Long> timeoutMap;
-    private static TimeoutService instance;
+    private static UserTimeoutFunctions instance;
 
-    private TimeoutService() {
+    private UserTimeoutFunctions() {
         badPasswordsCount = new ConcurrentHashMap<>();
         timeoutMap = new ConcurrentHashMap<>();
     }
 
-    public static synchronized TimeoutService getInstance() {
+    public static synchronized UserTimeoutFunctions getInstance() {
         if (instance == null) {
-            instance = new TimeoutService();
+            instance = new UserTimeoutFunctions();
         }
         return instance;
     }

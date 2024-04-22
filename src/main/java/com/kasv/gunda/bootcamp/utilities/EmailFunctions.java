@@ -1,15 +1,17 @@
-package com.kasv.gunda.bootcamp.services;
+package com.kasv.gunda.bootcamp.utilities;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
-public class EmailService {
+
+@Component
+public class EmailFunctions {
     private final JavaMailSender emailSender;
 
-    public EmailService(JavaMailSender emailSender) {
+    public EmailFunctions(JavaMailSender emailSender) {
         this.emailSender = emailSender;
     }
 
