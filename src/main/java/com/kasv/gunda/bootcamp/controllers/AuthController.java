@@ -1,6 +1,7 @@
 package com.kasv.gunda.bootcamp.controllers;
 
 import com.google.gson.Gson;
+import com.kasv.gunda.bootcamp.entities.LoginRequest;
 import com.kasv.gunda.bootcamp.entities.LogoutRequest;
 import com.kasv.gunda.bootcamp.entities.User;
 import com.kasv.gunda.bootcamp.services.AuthService;
@@ -11,29 +12,30 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-//@RequestMapping("/api")
+@RequestMapping("/api")
+@CrossOrigin
 public class AuthController {
 
     private final AuthService authService;
     public AuthController(AuthService authService) { this.authService = authService; }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody User user) {
+    public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest) {
 
         Gson gson = new Gson();
         Map<String, String> jsonResponse = new HashMap<>();
-
-        if (user.getUsername() == null ||
-                user.getPassword() == null ||
-                user.getUsername().isEmpty() ||
-                user.getPassword().isEmpty()) {
+        System.out.println(loginRequest.getUsername() + " " + loginRequest.getPassword());
+        if (loginRequest.getUsername() == null ||
+                loginRequest.getPassword() == null ||
+                loginRequest.getUsername().isEmpty() ||
+                loginRequest.getPassword().isEmpty()) {
 
             jsonResponse.put("error", "Invalid request. Please provide valid input data.");
 
             return ResponseEntity.status(400).body(gson.toJson(jsonResponse));
         }
 
-        return this.authService.login(user);
+        return this.authService.login(loginRequest);
     }
 
     @PostMapping("/logout")

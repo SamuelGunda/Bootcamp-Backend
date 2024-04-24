@@ -1,6 +1,7 @@
 package com.kasv.gunda.bootcamp.services;
 
 import com.google.gson.Gson;
+import com.kasv.gunda.bootcamp.entities.LoginRequest;
 import com.kasv.gunda.bootcamp.entities.LogoutRequest;
 import com.kasv.gunda.bootcamp.entities.User;
 import com.kasv.gunda.bootcamp.utilities.*;
@@ -24,15 +25,15 @@ public class AuthService {
         this.emailFunctions = emailFunctions;
     }
 
-    public ResponseEntity<String> login(User user) {
+    public ResponseEntity<String> login(LoginRequest loginRequest) {
 
         Gson gson = new Gson();
         Map<String, String> jsonResponse = new HashMap<>();
 
-        User userFromDb = userRepository.findByUsername(user.getUsername());
+        User userFromDb = userRepository.findByUsername(loginRequest.getUsername());
 
         if (userFromDb != null) {
-            if (userFromDb.getPassword().equals(user.getPassword()) && userTimeoutFunctions.isUserOnTimeout(userFromDb.getId()) == false){
+            if (userFromDb.getPassword().equals(loginRequest.getPassword()) && userTimeoutFunctions.isUserOnTimeout(userFromDb.getId()) == false){
 
                 String token = TokenGenerator.generateToken();
                 tokenFunctions.storeToken((long) userFromDb.getId(), token);
@@ -65,7 +66,7 @@ public class AuthService {
                 return ResponseEntity.status(401).body(gson.toJson(jsonResponse));
             }
         } else {
-            jsonResponse.put("error", "User with username " + user.getUsername() + " does not exist. Please provide valid credentials.");
+            jsonResponse.put("error", "User with username " + loginRequest.getUsername() + " does not exist. Please provide valid credentials.");
             return ResponseEntity.status(404).body(gson.toJson(jsonResponse));
         }
     }
