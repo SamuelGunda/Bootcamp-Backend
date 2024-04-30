@@ -12,7 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-//@RequestMapping("/api/students")
+@RequestMapping("/api")
+@CrossOrigin
 public class StudentController {
     private final StudentService studentService;
 

@@ -1,6 +1,7 @@
 package com.kasv.gunda.bootcamp.services;
 
 import com.google.gson.Gson;
+import com.kasv.gunda.bootcamp.entities.AuthCheck;
 import com.kasv.gunda.bootcamp.entities.LoginRequest;
 import com.kasv.gunda.bootcamp.entities.LogoutRequest;
 import com.kasv.gunda.bootcamp.entities.User;
@@ -46,7 +47,7 @@ public class AuthService {
 
             } else {
                 if (userTimeoutFunctions.isUserOnTimeout(userFromDb.getId())) {
-                    jsonResponse.put("message", "Your account is locked. Please try again after 5 seconds.");
+                    jsonResponse.put("error", "Your account is locked. Please try again in 5 seconds.");
                     return ResponseEntity.status(401).body(gson.toJson(jsonResponse));
                 }
                 if (userTimeoutFunctions.getBadPasswordsCount(userFromDb.getId()) < 3) {
@@ -54,7 +55,7 @@ public class AuthService {
                 }
                 if (userTimeoutFunctions.getBadPasswordsCount(userFromDb.getId()) >= 3 ) {
                     userTimeoutFunctions.setUserTimeout( userFromDb.getId());
-                    jsonResponse.put("message", "Your account has been locked. Please try again after 5 seconds.");
+                    jsonResponse.put("error", "Your account has been locked. Please try again in 5 seconds.");
                     return ResponseEntity.status(401).body(gson.toJson(jsonResponse));
                 }
                 jsonResponse.put(
@@ -116,5 +117,46 @@ public class AuthService {
             jsonResponse.put("error", "User with username " + user.getUsername() + " does not exist.");
             return ResponseEntity.status(404).body(gson.toJson(jsonResponse));
         }
+    }
+
+    public ResponseEntity<String> isAuthenticated(AuthCheck authCheck) {
+
+            Gson gson = new Gson();
+            Map<String, String> jsonResponse = new HashMap<>();
+
+            long userId = (long) userRepository.findIdByUsername(authCheck.getUsername());
+
+            if (tokenFunctions.isTokenExists(userId)) {
+                if (tokenFunctions.isTokenValid(authCheck.getToken())) {
+                    jsonResponse.put("message", "User is authenticated.");
+                    return ResponseEntity.status(200).body(gson.toJson(jsonResponse));
+                } else {
+                    jsonResponse.put("error", "Invalid token. Please provide valid token.");
+                    return ResponseEntity.status(401).body(gson.toJson(jsonResponse));
+                }
+            } else {
+                jsonResponse.put("error", "User is not authenticated.");
+                return ResponseEntity.status(401).body(gson.toJson(jsonResponse));
+            }
+    }
+
+    public ResponseEntity<String> register(User user) {
+
+            Gson gson = new Gson();
+            Map<String, String> jsonResponse = new HashMap<>();
+
+            if (userRepository.existsByUsername(user.getUsername())) {
+                jsonResponse.put("error", "User with username " + user.getUsername() + " already exists.");
+                return ResponseEntity.status(400).body(gson.toJson(jsonResponse));
+            }
+
+            if (userRepository.existsByEmail(user.getEmail())) {
+                jsonResponse.put("error", "User with email " + user.getEmail() + " already exists.");
+                return ResponseEntity.status(400).body(gson.toJson(jsonResponse));
+            }
+
+            userRepository.save(user);
+            jsonResponse.put("message", "User registered successfully.");
+            return ResponseEntity.status(200).body(gson.toJson(jsonResponse));
     }
 }

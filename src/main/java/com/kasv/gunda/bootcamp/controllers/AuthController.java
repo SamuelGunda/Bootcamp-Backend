@@ -1,6 +1,7 @@
 package com.kasv.gunda.bootcamp.controllers;
 
 import com.google.gson.Gson;
+import com.kasv.gunda.bootcamp.entities.AuthCheck;
 import com.kasv.gunda.bootcamp.entities.LoginRequest;
 import com.kasv.gunda.bootcamp.entities.LogoutRequest;
 import com.kasv.gunda.bootcamp.entities.User;
@@ -38,6 +39,25 @@ public class AuthController {
         return this.authService.login(loginRequest);
     }
 
+    @PostMapping("/isAuthenticated")
+    public ResponseEntity<String> isAuthenticated(@RequestBody AuthCheck authCheck) {
+
+        Gson gson = new Gson();
+        Map<String, String> jsonResponse = new HashMap<>();
+
+        if (authCheck.getUsername() == null ||
+                authCheck.getUsername().isEmpty() ||
+                authCheck.getToken() == null ||
+                authCheck.getToken().isEmpty()) {
+
+            jsonResponse.put("error", "Invalid request. Please provide valid input data.");
+
+            return ResponseEntity.status(400).body(gson.toJson(jsonResponse));
+        }
+
+        return this.authService.isAuthenticated(authCheck);
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@RequestBody LogoutRequest logoutRequest) {
 
@@ -55,6 +75,27 @@ public class AuthController {
         }
 
         return this.authService.logout(logoutRequest);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@RequestBody User user) {
+
+        Gson gson = new Gson();
+        Map<String, String> jsonResponse = new HashMap<>();
+
+        if (user.getUsername() == null ||
+                user.getUsername().isEmpty() ||
+                user.getPassword() == null ||
+                user.getPassword().isEmpty() ||
+                user.getEmail() == null ||
+                user.getEmail().isEmpty()) {
+
+            jsonResponse.put("error", "Invalid request. Please provide valid input data.");
+
+            return ResponseEntity.status(400).body(gson.toJson(jsonResponse));
+        }
+
+        return this.authService.register(user);
     }
 
     @PostMapping("/forgotPassword")

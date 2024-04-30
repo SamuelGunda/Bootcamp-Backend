@@ -9,6 +9,7 @@ import com.kasv.gunda.bootcamp.repositories.UserRepository;
 import com.kasv.gunda.bootcamp.utilities.TokenFunctions;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.HashMap;
 import java.util.List;
