@@ -1,13 +1,16 @@
 package com.kasv.gunda.bootcamp.controllers;
 
 import com.google.gson.Gson;
-import com.kasv.gunda.bootcamp.entities.AuthCheck;
-import com.kasv.gunda.bootcamp.entities.LogoutRequest;
-import com.kasv.gunda.bootcamp.entities.Student;
+import com.kasv.gunda.bootcamp.models.Student;
+import com.kasv.gunda.bootcamp.payload.response.MessageResponse;
 import com.kasv.gunda.bootcamp.services.StudentService;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.kasv.gunda.bootcamp.security.jwt.JwtUtils;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,37 +20,32 @@ import java.util.Map;
 public class StudentController {
     private final StudentService studentService;
 
+    @Autowired
+    JwtUtils jwtUtils;
+
     public StudentController(StudentService studentService) {
         this.studentService = studentService;
     }
 
-    @PostMapping("/students")
-    public String getAllStudents(@RequestBody(required = false) AuthCheck authCheck) {
-
-        return studentService.getAllStudents(authCheck);
-
+    /* Returns all students,
+     while admin can view all students,
+     students can only view their first name
+     and first letter of their last name */
+    @GetMapping("/students")
+    @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
+    public String getAllStudents(HttpServletRequest request) {
+//        studentService.getAllStudents(request);
+        System.out.println(request.getHeader("Authorization"));
+        System.out.println(Arrays.toString(request.getCookies()));
+        return "All students";
     }
 
     @PostMapping("/student/{id}")
-    public ResponseEntity<String> getStudentById(@PathVariable Long id, @RequestBody AuthCheck authCheck) {
-
-        Gson gson = new Gson();
-        Map<String, String> jsonResponse = new HashMap<>();
-
-        if (authCheck.getUsername() == null ||
-                authCheck.getToken() == null ||
-                authCheck.getUsername().isEmpty() ||
-                authCheck.getToken().isEmpty() ||
-                id == null) {
-
-            jsonResponse.put("error", "Invalid request. Please provide valid input data.");
-
-            return ResponseEntity.status(400).body(gson.toJson(jsonResponse));
-        }
-
-        return studentService.getStudentById(id, authCheck);
+    public ResponseEntity<String> getStudentById(@PathVariable Long id) {
+        return null;
     }
 
+    /* Registers a new student */
     @PostMapping("/student/register")
     public ResponseEntity<String> registerStudent(@RequestBody Student student) {
 
@@ -64,20 +62,19 @@ public class StudentController {
         return studentService.registerStudent(student);
     }
 
+    /* Updates student data */
     @PutMapping("/student/update/{id}")
-    public ResponseEntity<String> updateLastName(@PathVariable Long id, @RequestBody LogoutRequest details) {
-
-        Gson gson = new Gson();
-        Map<String, String> jsonResponse = new HashMap<>();
-
-        if(details.getLastName() == null || details.getLastName().isEmpty() || id == null
-                || details.getToken() == null || details.getToken().isEmpty()) {
-            jsonResponse.put("error", "Invalid request. Please provide valid input data.");
-            return ResponseEntity.status(400).body(gson.toJson(jsonResponse));
-        }
-
-        return studentService.updateLastName(id, details);
+    public ResponseEntity<String> updateStudent( @PathVariable Long id, @RequestBody Student student) {
+        return null;
     }
 
+    /* Returns the count of all students */
+    @GetMapping("/students/count")
+    public ResponseEntity<String> getStudentsCount() {
 
+        Gson gson = new Gson();
+        Map<String, Integer> jsonResponse = new HashMap<>();
+        jsonResponse.put("count", studentService.getStudentsCount());
+        return ResponseEntity.ok(gson.toJson(jsonResponse));
+    }
 }
