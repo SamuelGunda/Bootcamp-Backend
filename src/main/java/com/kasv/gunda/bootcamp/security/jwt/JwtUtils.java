@@ -1,19 +1,18 @@
 package com.kasv.gunda.bootcamp.security.jwt;
 
-import com.kasv.gunda.bootcamp.security.services.UserDetailsImpl;
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
+
 import io.jsonwebtoken.security.Keys;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.WebUtils;
+
+import io.jsonwebtoken.*;
+
+import com.kasv.gunda.bootcamp.security.services.UserDetailsImpl;
 
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 
 @Component
@@ -26,28 +25,16 @@ public class JwtUtils {
     @Value("${gunda.bootcamp.app.jwtExpirationMs}")
     private int jwtExpirationMs;
 
-    @Value("${gunda.bootcamp.app.jwtCookieName}")
-    private String jwtCookie;
-
-    public String getJwtFromCookies(HttpServletRequest request) {
-        Cookie cookie = WebUtils.getCookie(request, jwtCookie);
-        if (cookie != null) {
-            return cookie.getValue();
-        } else {
-            return null;
-        }
+        public String generateJwtToken(UserDetailsImpl userPrincipal) {
+            return Jwts.builder().setSubject(userPrincipal.getUsername())
+                    .claim("id", userPrincipal.getId())
+                    .claim("email", userPrincipal.getEmail())
+                    .claim("roles", userPrincipal.getAuthorities())
+                    .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs)).signWith(key(), SignatureAlgorithm.HS256)
+                .compact();
     }
 
-    public ResponseCookie generateJwtCookie(UserDetailsImpl userPrincipal) {
-        String jwt = generateTokenFromUsername(userPrincipal.getUsername());
-        ResponseCookie cookie = ResponseCookie.from(jwtCookie, jwt).path("/api").maxAge(24 * 60 * 60).httpOnly(true).sameSite("None").secure(true).build();
-        return cookie;
-    }
-
-    public ResponseCookie getCleanJwtCookie() {
-        ResponseCookie cookie = ResponseCookie.from(jwtCookie, null).path("/api").build();
-        return cookie;
-    }
 
     public String getUserNameFromJwtToken(String token) {
         return Jwts.parserBuilder().setSigningKey(key()).build()
@@ -55,13 +42,16 @@ public class JwtUtils {
     }
 
     private Key key() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+        byte[] decodedSecret = Base64.getUrlDecoder().decode(jwtSecret);
+        return Keys.hmacShaKeyFor(decodedSecret);
     }
 
     public boolean validateJwtToken(String authToken) {
         try {
             Jwts.parserBuilder().setSigningKey(key()).build().parse(authToken);
             return true;
+        } catch (SignatureException e) {
+            logger.error("Invalid JWT signature: {}", e.getMessage());
         } catch (MalformedJwtException e) {
             logger.error("Invalid JWT token: {}", e.getMessage());
         } catch (ExpiredJwtException e) {
@@ -73,14 +63,5 @@ public class JwtUtils {
         }
 
         return false;
-    }
-
-    public String generateTokenFromUsername(String username) {
-        return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
-                .signWith(key(), SignatureAlgorithm.HS256)
-                .compact();
     }
 }
