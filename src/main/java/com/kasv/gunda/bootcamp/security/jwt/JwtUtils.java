@@ -41,6 +41,11 @@ public class JwtUtils {
                 .parseClaimsJws(token).getBody().getSubject();
     }
 
+    public Long getUserIdFromJwtToken(String token) {
+        return Jwts.parserBuilder().setSigningKey(key()).build()
+                .parseClaimsJws(token).getBody().get("id", Long.class);
+    }
+
     private Key key() {
         byte[] decodedSecret = Base64.getUrlDecoder().decode(jwtSecret);
         return Keys.hmacShaKeyFor(decodedSecret);

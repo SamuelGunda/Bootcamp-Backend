@@ -13,6 +13,10 @@ import  com.kasv.gunda.bootcamp.models.User;
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
     Optional<RefreshToken> findByToken(String token);
 
+    Optional<RefreshToken> findByUser(User user);
+
     @Modifying
     int deleteByUser(User user);
+
+    int deleteByUserId(Long userId);
 }

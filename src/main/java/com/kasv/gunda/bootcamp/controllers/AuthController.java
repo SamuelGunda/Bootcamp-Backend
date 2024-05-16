@@ -27,6 +27,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @CrossOrigin(origins = "http://localhost:3000", maxAge = 3600)
@@ -137,9 +138,13 @@ public class AuthController {
     @PostMapping("/signout")
     @CrossOrigin(origins = "http://localhost:3000" , maxAge = 3600)
     public ResponseEntity<?> logoutUser() {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long userId = userDetails.getId();
-        refreshTokenService.deleteByUserId(userId);
-        return ResponseEntity.ok(new MessageResponse("Log out successful!"));
+        Object principle = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (!Objects.equals(principle.toString(), "anonymousUser")) {
+            Long userId = ((UserDetailsImpl) principle).getId();
+            refreshTokenService.deleteByUserId(userId);
+        }
+
+        return ResponseEntity.ok().body(new MessageResponse("You've been signed out!"));
     }
 }

@@ -1,10 +1,6 @@
 package com.kasv.gunda.bootcamp.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Date;
@@ -25,5 +21,8 @@ public class Student {
     private String lastName;
     private Date dob;
 
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
 }
