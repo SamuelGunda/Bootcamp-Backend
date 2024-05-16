@@ -1,13 +1,9 @@
 package com.kasv.gunda.bootcamp.controllers;
 
-import com.google.gson.Gson;
-import com.kasv.gunda.bootcamp.models.Student;
-import com.kasv.gunda.bootcamp.models.StudentRegistration;
+import com.kasv.gunda.bootcamp.models.StudentApplication;
 import com.kasv.gunda.bootcamp.payload.request.StudentUpdateRequest;
-import com.kasv.gunda.bootcamp.payload.response.MessageResponse;
 import com.kasv.gunda.bootcamp.services.StudentService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,10 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import com.kasv.gunda.bootcamp.security.jwt.JwtUtils;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -34,10 +27,12 @@ public class StudentController {
         this.studentService = studentService;
     }
 
-    /* Returns all students,
-     while admin can view all students,
-     students can only view their first name
-     and first letter of their last name */
+    /*
+    * Returns all student data
+    * Admin can view full student data
+    * Basic users can only see student first name and first letter of last name
+    * */
+
     @GetMapping("/students")
     @CrossOrigin(origins = "http://localhost:3000")
     public ResponseEntity<String> getAllStudents() {
@@ -48,7 +43,13 @@ public class StudentController {
         return ResponseEntity.ok(studentService.getAllStudents(authorities));
     }
 
-    @GetMapping("/student/{id}")
+    /*
+    * Returns student data by id
+    * Admin can view all student data
+    * Basic users can only view their own data
+    * */
+
+    @GetMapping("/students/{id}")
     @CrossOrigin(origins = "http://localhost:3000")
     public ResponseEntity<String> getStudentById(@PathVariable Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -61,19 +62,13 @@ public class StudentController {
         }
     }
 
-    /* Registers a new student */
-    @PostMapping("/student/register")
-    @CrossOrigin(origins = "http://localhost:3000")
-    public ResponseEntity<String> registerStudent(@RequestBody StudentRegistration studentForm, HttpServletRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        String authorizationHeader = request.getHeader("Authorization");
+    /*
+    * Updates student data by id
+    * Admin can update all student data
+    * Basic users can only update their own data
+    * */
 
-        return studentService.registerStudent(studentForm, authorities, authorizationHeader);
-    }
-
-    /* Updates student data */
-    @PutMapping("/student/update/{id}")
+    @PutMapping("/students/{id}")
     @CrossOrigin(origins = "http://localhost:3000")
     public ResponseEntity<String> updateStudent(@PathVariable Long id, @RequestBody StudentUpdateRequest updateRequest, HttpServletRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -83,13 +78,26 @@ public class StudentController {
         return studentService.updateStudent(id, updateRequest, authorities, authorizationHeader);
     }
 
-    /* Returns the count of all students */
-    @GetMapping("/students/count")
-    public ResponseEntity<String> getStudentsCount() {
+    /*
+    * Registers a new student
+    * Admin can register a new student
+    * Basic users can only register themselves and must be approved by an admin
+    * */
 
-        Gson gson = new Gson();
-        Map<String, Integer> jsonResponse = new HashMap<>();
-        jsonResponse.put("count", studentService.getStudentsCount());
-        return ResponseEntity.ok(gson.toJson(jsonResponse));
+    @PostMapping("/students")
+    @CrossOrigin(origins = "http://localhost:3000")
+    public ResponseEntity<String> registerStudent(@RequestBody StudentApplication studentForm, HttpServletRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+        String authorizationHeader = request.getHeader("Authorization");
+
+        return studentService.registerStudent(studentForm, authorities, authorizationHeader);
+    }
+
+    /* Returns the count of all students */
+
+    @GetMapping("/count")
+    public ResponseEntity<Integer> getStudentsCount() {
+        return ResponseEntity.ok(studentService.getStudentsCount());
     }
 }

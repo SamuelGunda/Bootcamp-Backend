@@ -2,9 +2,9 @@ package com.kasv.gunda.bootcamp.services;
 
 import com.google.gson.Gson;
 import com.kasv.gunda.bootcamp.models.Student;
-import com.kasv.gunda.bootcamp.models.StudentRegistration;
+import com.kasv.gunda.bootcamp.models.StudentApplication;
 import com.kasv.gunda.bootcamp.payload.request.StudentUpdateRequest;
-import com.kasv.gunda.bootcamp.repositories.StudentRegistrationRepository;
+import com.kasv.gunda.bootcamp.repositories.StudentApplicationRepository;
 import com.kasv.gunda.bootcamp.repositories.StudentRepository;
 import com.kasv.gunda.bootcamp.repositories.UserRepository;
 import com.kasv.gunda.bootcamp.security.jwt.JwtUtils;
@@ -19,13 +19,13 @@ public class StudentService {
 
     private final JwtUtils jwtUtils;
     private final StudentRepository studentRepository;
-    private final StudentRegistrationRepository studentRegistrationRepository;
+    private final StudentApplicationRepository studentApplicationRepository;
     private final UserRepository userRepository;
 
-    public StudentService(JwtUtils jwtUtils, StudentRepository studentRepository, StudentRegistrationRepository studentRegistrationRepository, UserRepository userRepository) {
+    public StudentService(JwtUtils jwtUtils, StudentRepository studentRepository, StudentApplicationRepository studentApplicationRepository, UserRepository userRepository) {
         this.jwtUtils = jwtUtils;
         this.studentRepository = studentRepository;
-        this.studentRegistrationRepository = studentRegistrationRepository;
+        this.studentApplicationRepository = studentApplicationRepository;
         this.userRepository = userRepository;
     }
 
@@ -52,7 +52,7 @@ public class StudentService {
         return (int) studentRepository.count();
     }
 
-    public ResponseEntity<String> registerStudent(StudentRegistration sur, Collection<? extends GrantedAuthority> authorities , String authorizationHeader) {
+    public ResponseEntity<String> registerStudent(StudentApplication sur, Collection<? extends GrantedAuthority> authorities , String authorizationHeader) {
         Gson gson = new Gson();
         Map<String, String> jsonResponse = new HashMap<>();
 
@@ -81,7 +81,7 @@ public class StudentService {
             }
 
             try {
-                studentRegistrationRepository.save(sur);
+                studentApplicationRepository.save(sur);
                 return ResponseEntity.status(201).body("Your registration is pending approval.");
             } catch (Exception e) {
                 jsonResponse.put("error", e.getMessage());
