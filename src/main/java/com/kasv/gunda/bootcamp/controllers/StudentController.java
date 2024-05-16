@@ -1,83 +1,95 @@
 package com.kasv.gunda.bootcamp.controllers;
 
 import com.google.gson.Gson;
-import com.kasv.gunda.bootcamp.entities.AuthCheck;
-import com.kasv.gunda.bootcamp.entities.LogoutRequest;
-import com.kasv.gunda.bootcamp.entities.Student;
+import com.kasv.gunda.bootcamp.models.Student;
+import com.kasv.gunda.bootcamp.models.StudentRegistration;
+import com.kasv.gunda.bootcamp.payload.request.StudentUpdateRequest;
+import com.kasv.gunda.bootcamp.payload.response.MessageResponse;
 import com.kasv.gunda.bootcamp.services.StudentService;
+import jakarta.servlet.http.HttpServletRequest;
+import org.apache.coyote.Response;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import com.kasv.gunda.bootcamp.security.jwt.JwtUtils;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:3000")
 public class StudentController {
     private final StudentService studentService;
+
+    @Autowired
+    JwtUtils jwtUtils;
 
     public StudentController(StudentService studentService) {
         this.studentService = studentService;
     }
 
-    @PostMapping("/students")
-    public String getAllStudents(@RequestBody(required = false) AuthCheck authCheck) {
+    /* Returns all students,
+     while admin can view all students,
+     students can only view their first name
+     and first letter of their last name */
+    @GetMapping("/students")
+    @CrossOrigin(origins = "http://localhost:3000")
+    public ResponseEntity<String> getAllStudents() {
 
-        return studentService.getAllStudents(authCheck);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 
+        return ResponseEntity.ok(studentService.getAllStudents(authorities));
     }
 
-    @PostMapping("/student/{id}")
-    public ResponseEntity<String> getStudentById(@PathVariable Long id, @RequestBody AuthCheck authCheck) {
+    @GetMapping("/student/{id}")
+    @CrossOrigin(origins = "http://localhost:3000")
+    public ResponseEntity<String> getStudentById(@PathVariable Long id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 
-        Gson gson = new Gson();
-        Map<String, String> jsonResponse = new HashMap<>();
-
-        if (authCheck.getUsername() == null ||
-                authCheck.getToken() == null ||
-                authCheck.getUsername().isEmpty() ||
-                authCheck.getToken().isEmpty() ||
-                id == null) {
-
-            jsonResponse.put("error", "Invalid request. Please provide valid input data.");
-
-            return ResponseEntity.status(400).body(gson.toJson(jsonResponse));
+        if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            return studentService.getStudentById(id);
+        } else {
+            return ResponseEntity.status(403).body("You are not authorized to view this resource.");
         }
-
-        return studentService.getStudentById(id, authCheck);
     }
 
+    /* Registers a new student */
     @PostMapping("/student/register")
-    public ResponseEntity<String> registerStudent(@RequestBody Student student) {
+    @CrossOrigin(origins = "http://localhost:3000")
+    public ResponseEntity<String> registerStudent(@RequestBody StudentRegistration studentForm, HttpServletRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+        String authorizationHeader = request.getHeader("Authorization");
 
-        Gson gson = new Gson();
-        Map<String, String> jsonResponse = new HashMap<>();
-
-        if (student.getFirstName() == null || student.getFirstName().isEmpty() ||
-                student.getLastName() == null || student.getLastName().isEmpty() ||
-                student.getDob() == null) {
-            jsonResponse.put("error", "Invalid request. Please provide valid input data.");
-            return ResponseEntity.status(400).body(gson.toJson(jsonResponse));
-        }
-
-        return studentService.registerStudent(student);
+        return studentService.registerStudent(studentForm, authorities, authorizationHeader);
     }
 
+    /* Updates student data */
     @PutMapping("/student/update/{id}")
-    public ResponseEntity<String> updateLastName(@PathVariable Long id, @RequestBody LogoutRequest details) {
+    @CrossOrigin(origins = "http://localhost:3000")
+    public ResponseEntity<String> updateStudent(@PathVariable Long id, @RequestBody StudentUpdateRequest updateRequest, HttpServletRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+        String authorizationHeader = request.getHeader("Authorization");
 
-        Gson gson = new Gson();
-        Map<String, String> jsonResponse = new HashMap<>();
-
-        if(details.getLastName() == null || details.getLastName().isEmpty() || id == null
-                || details.getToken() == null || details.getToken().isEmpty()) {
-            jsonResponse.put("error", "Invalid request. Please provide valid input data.");
-            return ResponseEntity.status(400).body(gson.toJson(jsonResponse));
-        }
-
-        return studentService.updateLastName(id, details);
+        return studentService.updateStudent(id, updateRequest, authorities, authorizationHeader);
     }
 
+    /* Returns the count of all students */
+    @GetMapping("/students/count")
+    public ResponseEntity<String> getStudentsCount() {
 
+        Gson gson = new Gson();
+        Map<String, Integer> jsonResponse = new HashMap<>();
+        jsonResponse.put("count", studentService.getStudentsCount());
+        return ResponseEntity.ok(gson.toJson(jsonResponse));
+    }
 }
