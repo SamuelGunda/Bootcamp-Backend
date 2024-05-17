@@ -90,23 +90,20 @@ public class StudentService {
 
         Student studentFromDatabase = studentRepository.findById(id);
 
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            String token = authorizationHeader.substring(7);
-            long usersId = jwtUtils.getUserIdFromJwtToken(token);
-
-            if (usersId != studentFromDatabase.getUser().getId()) {
-                if (authorities.stream().noneMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))){
-                    throw new InvalidActionException("You are not authorized to view this resource.");
-                }
+        try {
+            if (hasAuthorityOverStudent(authorizationHeader, studentFromDatabase, authorities)) {
+                return StudentResponse.builder()
+                        .id(studentFromDatabase.getId())
+                        .firstName(studentFromDatabase.getFirstName())
+                        .lastName(studentFromDatabase.getLastName())
+                        .dob(studentFromDatabase.getDob())
+                        .build();
+            } else {
+                throw new InvalidActionException("You are not authorized to access this resource.");
             }
+        } catch (InvalidActionException e) {
+            throw new InvalidActionException(e.getMessage());
         }
-
-        return StudentResponse.builder()
-                .id(studentFromDatabase.getId())
-                .firstName(studentFromDatabase.getFirstName())
-                .lastName(studentFromDatabase.getLastName())
-                .dob(studentFromDatabase.getDob())
-                .build();
     }
 
     public StudentResponse updateStudent(long id, StudentUpdateRequest sur, Collection<? extends GrantedAuthority> authorities, String  authorizationHeader) {
@@ -117,15 +114,8 @@ public class StudentService {
 
         Student studentFromDatabase = studentRepository.findById(id);
 
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            String token = authorizationHeader.substring(7);
-            long usersId = jwtUtils.getUserIdFromJwtToken(token);
-
-            if (usersId != studentFromDatabase.getUser().getId()) {
-                if (authorities.stream().noneMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))){
-                    throw new InvalidActionException("You are not authorized to update this resource.");
-                }
-            }
+        if (!hasAuthorityOverStudent(authorizationHeader, studentFromDatabase, authorities)) {
+            throw new InvalidActionException("You are not authorized to access this resource.");
         }
 
         studentFromDatabase.setFirstName(sur.getFirstName() != null ? sur.getFirstName() : studentFromDatabase.getFirstName());
@@ -140,5 +130,21 @@ public class StudentService {
                 .lastName(studentFromDatabase.getLastName())
                 .dob(studentFromDatabase.getDob())
                 .build();
+    }
+
+    private boolean hasAuthorityOverStudent(String authorizationHeader, Student studentFromDatabase, Collection<? extends GrantedAuthority> authorities) {
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            String token = authorizationHeader.substring(7);
+            long usersId = jwtUtils.getUserIdFromJwtToken(token);
+
+            if (usersId != studentFromDatabase.getUser().getId()) {
+                if (authorities.stream().noneMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))){
+                    throw new InvalidActionException("You are not authorized to access this resource.");
+                }
+            }
+        } else {
+            throw new InvalidActionException("You are not authorized to access this resource.");
+        }
+        return true;
     }
 }
