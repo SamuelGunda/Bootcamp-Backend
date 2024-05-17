@@ -19,6 +19,8 @@ public class Student {
     private long id;
     private String firstName;
     private String lastName;
+
+    @Temporal(TemporalType.DATE)
     private Date dob;
 
     @OneToOne

@@ -24,6 +24,7 @@ public class StudentApplication {
 
     private String lastName;
 
+    @Temporal(TemporalType.DATE)
     private Date dob;
 
     @Enumerated(EnumType.STRING)
